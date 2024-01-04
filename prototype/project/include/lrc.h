@@ -1,5 +1,5 @@
-#ifndef AZURELRC_H
-#define AZURELRC_H
+#ifndef LRC_H
+#define LRC_H
 #include "jerasure.h"
 #include "reed_sol.h"
 #include "cauchy.h"
@@ -15,5 +15,7 @@ namespace ECProject
     bool check_received_block(int k, int expect_block_number, std::shared_ptr<std::vector<int>> shards_idx_ptr, int shards_ptr_size = -1);
     bool check_k_data(std::vector<int> erasures, int k);
     int check_decodable_azure_lrc(int k, int g, int l, std::vector<int> failed_block, std::vector<int> new_matrix);
+    bool encode_partial_blocks_for_gr(int k, int m, char **data_ptrs, char **coding_ptrs, int blocksize, std::shared_ptr<std::vector<int>> data_idx_ptrs, int block_num, EncodeType encode_type);
+    bool perform_addition(char **data_ptrs, char **coding_ptrs, int blocksize, int block_num, int parity_num);
 }
 #endif

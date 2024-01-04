@@ -199,6 +199,7 @@ namespace ECProject
           object_placement.add_datanodeip(m_node_table[t_stripe.blocks[i]->map2node].node_ip);
           object_placement.add_datanodeport(m_node_table[t_stripe.blocks[i]->map2node].node_port);
           object_placement.add_blockkeys(t_stripe.blocks[i]->block_key);
+          object_placement.add_blockids(t_stripe.blocks[i]->block_id);
           t_cluster_set.insert(t_stripe.blocks[i]->map2cluster);
         }
       }
@@ -686,6 +687,7 @@ namespace ECProject
       else if (i >= k && i < k + g_m)
       {
         blocks_info[i].block_key = "Stripe" + std::to_string(stripe_id) + "_G" + std::to_string(i - k);
+        blocks_info[i].block_id = i;
         blocks_info[i].block_type = 'G';
         blocks_info[i].map2group = l;
         stripe_info.blocks.push_back(&blocks_info[i]);
@@ -693,6 +695,7 @@ namespace ECProject
       else
       {
         blocks_info[i].block_key = "Stripe" + std::to_string(stripe_id) + "_L" + std::to_string(i - k - g_m);
+        blocks_info[i].block_id = i;
         blocks_info[i].block_type = 'L';
         blocks_info[i].map2group = i - k - g_m;
         stripe_info.blocks.push_back(&blocks_info[i]);
@@ -1187,11 +1190,11 @@ namespace ECProject
     std::vector<std::vector<int>> new_merge_groups;
     for (it_g = m_merge_groups.begin(); it_g != m_merge_groups.end(); it_g++)
     {
-      int cur_block_id = 0;
       std::vector<int> s_merge_group;
       // for each xi stripes
       for (it_s = (*it_g).begin(); it_s != (*it_g).end(); it_s += num_of_stripes)
       {
+        int cur_block_id = 0;
         int l_stripe_id = m_cur_stripe_id;
         int l_cluster_id[l];
         int g_cluster_id;
@@ -1228,9 +1231,9 @@ namespace ECProject
           for (it_b = t_stripe.blocks.begin(); it_b != t_stripe.blocks.end(); it_b++)
           {
             Block *t_block = *it_b;
-            t_block->map2stripe = l_stripe_id;
             update_stripe_info_in_node(false, t_block->map2node, t_block->map2stripe);
             m_cluster_table[t_block->map2cluster].stripes.erase(t_block->map2stripe);
+            t_block->map2stripe = l_stripe_id;
             if (t_block->block_type == 'D')
             {
               int t_cluster_id = t_block->map2cluster;
@@ -1280,6 +1283,7 @@ namespace ECProject
               t_location.add_datanodeip(l_node.node_ip);
               t_location.add_datanodeport(l_node.node_port);
               t_location.add_blockkeys(t_block->block_key);
+              t_location.add_blockids(t_block->block_id);
               // remove the old local parity block from the cluster
               Cluster &l_cluster = m_cluster_table[t_block->map2cluster];
               for (it_c = l_cluster.blocks.begin(); it_c != l_cluster.blocks.end(); it_c++)
@@ -1322,6 +1326,7 @@ namespace ECProject
                   t_location.add_datanodeip(g_node.node_ip);
                   t_location.add_datanodeport(g_node.node_port);
                   t_location.add_blockkeys(t_block->block_key);
+                  t_location.add_blockids(t_block->block_id);
                 }
               }
               // remove the old global parity block from the cluster
@@ -1377,7 +1382,8 @@ namespace ECProject
           std::string t_block_key = "Stripe" + std::to_string(l_stripe_id) + "_L" + std::to_string(i);
           int t_map2cluster = l_cluster_id[i];
           int t_map2node = l_node_id[l * (num_of_stripes - 1) + i];
-          Block *t_block = new Block(t_block_key, 'L', block_size, i, l_stripe_id, t_map2cluster, t_map2node, "");
+          int t_block_id = larger_stripe.k + g_m + i;
+          Block *t_block = new Block(t_block_id, t_block_key, 'L', block_size, i, l_stripe_id, t_map2cluster, t_map2node, "");
           if (IF_DEBUG)
           {
             std::cout << "\033[1;33m" << t_block->block_key << ": Cluster" << t_block->map2cluster << ", Node" << t_block->map2node << "\033[0m" << std::endl;
@@ -1402,7 +1408,8 @@ namespace ECProject
         {
           std::string t_block_key = "Stripe" + std::to_string(l_stripe_id) + "_G" + std::to_string(i);
           int t_map2node = g_node_id[g_m * (num_of_stripes - 1) + i];
-          Block *t_block = new Block(t_block_key, 'G', block_size, l, l_stripe_id, g_cluster_id, t_map2node, "");
+          int t_block_id = larger_stripe.k + i;
+          Block *t_block = new Block(t_block_id, t_block_key, 'G', block_size, l, l_stripe_id, g_cluster_id, t_map2node, "");
           if (IF_DEBUG)
           {
             std::cout << "\033[1;33m" << t_block->block_key << ": Cluster" << t_block->map2cluster << ", Node" << t_block->map2node << "\033[0m" << std::endl;
@@ -1429,6 +1436,7 @@ namespace ECProject
               t_location.add_datanodeip(g_node.node_ip);
               t_location.add_datanodeport(g_node.node_port);
               t_location.add_blockkeys(t_block_key);
+              t_location.add_blockids(t_block_id);
             }
           }
         }
@@ -1833,16 +1841,17 @@ namespace ECProject
         temp_time = 0.0;
         gettimeofday(&g_start_time, NULL);
         // global parity block recalculation
-        auto send_main_plan = [this, k, l, g_m, block_size, g_main_plan, block_location, g_cluster_id, l_stripe_id]() mutable
+        auto send_main_plan = [this, larger_stripe, l, g_m, block_size, g_main_plan, block_location, g_cluster_id, l_stripe_id]() mutable
         {
           // main
           g_main_plan.set_type(true);
-          g_main_plan.set_k(k);
+          g_main_plan.set_k(larger_stripe.k);
           g_main_plan.set_l(l);
           g_main_plan.set_g_m(g_m);
           g_main_plan.set_block_size(block_size);
           g_main_plan.set_if_partial_decoding(m_encode_parameters.partial_decoding);
           g_main_plan.set_stripe_id(l_stripe_id);
+          g_main_plan.set_encodetype(m_encode_parameters.encodetype);
           for (auto itb = block_location.begin(); itb != block_location.end(); itb++)
           {
             proxy_proto::locationInfo t_location = block_location[itb->first];
@@ -1869,10 +1878,13 @@ namespace ECProject
         };
 
         // help
-        auto send_help_plan = [this, block_location, g_cluster_id, block_size, g_m](int first)
+        auto send_help_plan = [this, larger_stripe, block_location, g_cluster_id, block_size, g_m](int first)
         {
           proxy_proto::helpRecalPlan g_help_plan;
           proxy_proto::locationInfo t_location = block_location.at(first);
+          g_help_plan.set_k(larger_stripe.k);
+          g_help_plan.set_type(true);
+          g_help_plan.set_encodetype(m_encode_parameters.encodetype);
           g_help_plan.set_mainproxyip(m_cluster_table[g_cluster_id].proxy_ip);
           // port to accept data: mainproxy_port + cluster_id + 2
           g_help_plan.set_mainproxyport(m_cluster_table[g_cluster_id].proxy_port + 1);
@@ -1943,15 +1955,16 @@ namespace ECProject
         }
         temp_time = 0.0;
         gettimeofday(&l_start_time, NULL);
-        auto send_l_main_plan = [this, k, l, block_size, &l_main_plan, &parity_location, &l_cluster_id, l_stripe_id](int gid) mutable
+        auto send_l_main_plan = [this, larger_stripe, l, block_size, &l_main_plan, &parity_location, &l_cluster_id, l_stripe_id](int gid) mutable
         {
           l_main_plan[gid].set_type(false);
-          l_main_plan[gid].set_k(k);
+          l_main_plan[gid].set_k(larger_stripe.k);
           l_main_plan[gid].set_l(l);
           l_main_plan[gid].set_group_id(gid);
           l_main_plan[gid].set_block_size(block_size);
           l_main_plan[gid].set_if_partial_decoding(m_encode_parameters.partial_decoding);
           l_main_plan[gid].set_stripe_id(l_stripe_id);
+          l_main_plan[gid].set_encodetype(m_encode_parameters.encodetype);
           for (auto itb = parity_location[gid].begin(); itb != parity_location[gid].end(); itb++)
           {
             proxy_proto::locationInfo t_location = parity_location[gid][itb->first];
@@ -1964,6 +1977,7 @@ namespace ECProject
               new_cluster->add_datanodeip(t_location.datanodeip(ii));
               new_cluster->add_datanodeport(t_location.datanodeport(ii));
               new_cluster->add_blockkeys(t_location.blockkeys(ii));
+              new_cluster->add_blockids(t_location.blockids(ii));
             }
           }
           grpc::ClientContext context_m;
@@ -1975,10 +1989,13 @@ namespace ECProject
             std::cout << "Selected main proxy " << chosen_proxy_m << std::endl;
           }
         };
-        auto send_l_help_plan = [this, &parity_location, &l_cluster_id, block_size](int first, int gid)
+        auto send_l_help_plan = [this, larger_stripe, &parity_location, &l_cluster_id, block_size](int first, int gid)
         {
           proxy_proto::helpRecalPlan l_help_plan;
           proxy_proto::locationInfo t_location = parity_location[gid].at(first);
+          l_help_plan.set_type(false);
+          l_help_plan.set_k(larger_stripe.k);
+          l_help_plan.set_encodetype(m_encode_parameters.encodetype);
           l_help_plan.set_mainproxyip(m_cluster_table[l_cluster_id[gid]].proxy_ip);
           l_help_plan.set_mainproxyport(m_cluster_table[l_cluster_id[gid]].proxy_port + 1);
           for (int ii = 0; ii < int(t_location.blockkeys_size()); ii++)
@@ -1986,6 +2003,7 @@ namespace ECProject
             l_help_plan.add_datanodeip(t_location.datanodeip(ii));
             l_help_plan.add_datanodeport(t_location.datanodeport(ii));
             l_help_plan.add_blockkeys(t_location.blockkeys(ii));
+            l_help_plan.add_blockids(t_location.blockids(ii));
           }
           l_help_plan.set_if_partial_decoding(m_encode_parameters.partial_decoding);
           l_help_plan.set_block_size(block_size);
@@ -2097,8 +2115,8 @@ namespace ECProject
           gettimeofday(&d_end_time, NULL);
           temp_time = d_end_time.tv_sec - d_start_time.tv_sec + (d_end_time.tv_usec - d_start_time.tv_usec) * 1.0 / 1000000;
           // for the implementation of the relocation process: src_node -> proxy -> des_node, the time should be halved
-          // next optimizable direction: src_node -> des_node
-          temp_time /= 2;
+          // next optimizable direction: src_node -> des_node  Done!!! Done!!!
+          // temp_time /= 2;
           t_lc += temp_time * double(num2mov_k) / double(block_to_move_key.size());
           t_dc += temp_time * double(num2mov_v) / double(block_to_move_key.size());
         }

@@ -1006,6 +1006,8 @@ class helpRecalPlan final :
     kMainproxyportFieldNumber = 4,
     kBlockSizeFieldNumber = 8,
     kParityNumFieldNumber = 10,
+    kKFieldNumber = 11,
+    kEncodetypeFieldNumber = 12,
   };
   // repeated string datanodeip = 5;
   int datanodeip_size() const;
@@ -1158,6 +1160,24 @@ class helpRecalPlan final :
   void _internal_set_parity_num(int32_t value);
   public:
 
+  // int32 k = 11;
+  void clear_k();
+  int32_t k() const;
+  void set_k(int32_t value);
+  private:
+  int32_t _internal_k() const;
+  void _internal_set_k(int32_t value);
+  public:
+
+  // int32 encodetype = 12;
+  void clear_encodetype();
+  int32_t encodetype() const;
+  void set_encodetype(int32_t value);
+  private:
+  int32_t _internal_encodetype() const;
+  void _internal_set_encodetype(int32_t value);
+  public:
+
   // @@protoc_insertion_point(class_scope:proxy_proto.helpRecalPlan)
  private:
   class _Internal;
@@ -1178,6 +1198,8 @@ class helpRecalPlan final :
     int32_t mainproxyport_;
     int32_t block_size_;
     int32_t parity_num_;
+    int32_t k_;
+    int32_t encodetype_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -2724,16 +2746,17 @@ class ObjectAndPlacement final :
     kDatanodeipFieldNumber = 7,
     kDatanodeportFieldNumber = 8,
     kBlockkeysFieldNumber = 9,
+    kBlockidsFieldNumber = 10,
     kKeyFieldNumber = 1,
-    kClientipFieldNumber = 12,
+    kClientipFieldNumber = 13,
     kValuesizebyteFieldNumber = 2,
     kKFieldNumber = 3,
     kLFieldNumber = 4,
     kGMFieldNumber = 5,
     kStripeIdFieldNumber = 6,
-    kBlockSizeFieldNumber = 10,
-    kEncodeTypeFieldNumber = 11,
-    kClientportFieldNumber = 13,
+    kBlockSizeFieldNumber = 11,
+    kEncodeTypeFieldNumber = 12,
+    kClientportFieldNumber = 14,
   };
   // repeated string datanodeip = 7;
   int datanodeip_size() const;
@@ -2805,6 +2828,28 @@ class ObjectAndPlacement final :
   std::string* _internal_add_blockkeys();
   public:
 
+  // repeated int32 blockids = 10;
+  int blockids_size() const;
+  private:
+  int _internal_blockids_size() const;
+  public:
+  void clear_blockids();
+  private:
+  int32_t _internal_blockids(int index) const;
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+      _internal_blockids() const;
+  void _internal_add_blockids(int32_t value);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+      _internal_mutable_blockids();
+  public:
+  int32_t blockids(int index) const;
+  void set_blockids(int index, int32_t value);
+  void add_blockids(int32_t value);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+      blockids() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+      mutable_blockids();
+
   // string key = 1;
   void clear_key();
   const std::string& key() const;
@@ -2819,7 +2864,7 @@ class ObjectAndPlacement final :
   std::string* _internal_mutable_key();
   public:
 
-  // string clientip = 12;
+  // string clientip = 13;
   void clear_clientip();
   const std::string& clientip() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -2878,7 +2923,7 @@ class ObjectAndPlacement final :
   void _internal_set_stripe_id(int32_t value);
   public:
 
-  // int32 block_size = 10;
+  // int32 block_size = 11;
   void clear_block_size();
   int32_t block_size() const;
   void set_block_size(int32_t value);
@@ -2887,7 +2932,7 @@ class ObjectAndPlacement final :
   void _internal_set_block_size(int32_t value);
   public:
 
-  // int32 encode_type = 11;
+  // int32 encode_type = 12;
   void clear_encode_type();
   int32_t encode_type() const;
   void set_encode_type(int32_t value);
@@ -2896,7 +2941,7 @@ class ObjectAndPlacement final :
   void _internal_set_encode_type(int32_t value);
   public:
 
-  // int32 clientport = 13;
+  // int32 clientport = 14;
   void clear_clientport();
   int32_t clientport() const;
   void set_clientport(int32_t value);
@@ -2917,6 +2962,8 @@ class ObjectAndPlacement final :
     ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t > datanodeport_;
     mutable std::atomic<int> _datanodeport_cached_byte_size_;
     ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> blockkeys_;
+    ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t > blockids_;
+    mutable std::atomic<int> _blockids_cached_byte_size_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr key_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr clientip_;
     int32_t valuesizebyte_;
@@ -4446,6 +4493,46 @@ inline void helpRecalPlan::set_parity_num(int32_t value) {
   // @@protoc_insertion_point(field_set:proxy_proto.helpRecalPlan.parity_num)
 }
 
+// int32 k = 11;
+inline void helpRecalPlan::clear_k() {
+  _impl_.k_ = 0;
+}
+inline int32_t helpRecalPlan::_internal_k() const {
+  return _impl_.k_;
+}
+inline int32_t helpRecalPlan::k() const {
+  // @@protoc_insertion_point(field_get:proxy_proto.helpRecalPlan.k)
+  return _internal_k();
+}
+inline void helpRecalPlan::_internal_set_k(int32_t value) {
+  
+  _impl_.k_ = value;
+}
+inline void helpRecalPlan::set_k(int32_t value) {
+  _internal_set_k(value);
+  // @@protoc_insertion_point(field_set:proxy_proto.helpRecalPlan.k)
+}
+
+// int32 encodetype = 12;
+inline void helpRecalPlan::clear_encodetype() {
+  _impl_.encodetype_ = 0;
+}
+inline int32_t helpRecalPlan::_internal_encodetype() const {
+  return _impl_.encodetype_;
+}
+inline int32_t helpRecalPlan::encodetype() const {
+  // @@protoc_insertion_point(field_get:proxy_proto.helpRecalPlan.encodetype)
+  return _internal_encodetype();
+}
+inline void helpRecalPlan::_internal_set_encodetype(int32_t value) {
+  
+  _impl_.encodetype_ = value;
+}
+inline void helpRecalPlan::set_encodetype(int32_t value) {
+  _internal_set_encodetype(value);
+  // @@protoc_insertion_point(field_set:proxy_proto.helpRecalPlan.encodetype)
+}
+
 // -------------------------------------------------------------------
 
 // blockRelocPlan
@@ -5615,7 +5702,54 @@ ObjectAndPlacement::mutable_blockkeys() {
   return &_impl_.blockkeys_;
 }
 
-// int32 block_size = 10;
+// repeated int32 blockids = 10;
+inline int ObjectAndPlacement::_internal_blockids_size() const {
+  return _impl_.blockids_.size();
+}
+inline int ObjectAndPlacement::blockids_size() const {
+  return _internal_blockids_size();
+}
+inline void ObjectAndPlacement::clear_blockids() {
+  _impl_.blockids_.Clear();
+}
+inline int32_t ObjectAndPlacement::_internal_blockids(int index) const {
+  return _impl_.blockids_.Get(index);
+}
+inline int32_t ObjectAndPlacement::blockids(int index) const {
+  // @@protoc_insertion_point(field_get:proxy_proto.ObjectAndPlacement.blockids)
+  return _internal_blockids(index);
+}
+inline void ObjectAndPlacement::set_blockids(int index, int32_t value) {
+  _impl_.blockids_.Set(index, value);
+  // @@protoc_insertion_point(field_set:proxy_proto.ObjectAndPlacement.blockids)
+}
+inline void ObjectAndPlacement::_internal_add_blockids(int32_t value) {
+  _impl_.blockids_.Add(value);
+}
+inline void ObjectAndPlacement::add_blockids(int32_t value) {
+  _internal_add_blockids(value);
+  // @@protoc_insertion_point(field_add:proxy_proto.ObjectAndPlacement.blockids)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+ObjectAndPlacement::_internal_blockids() const {
+  return _impl_.blockids_;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >&
+ObjectAndPlacement::blockids() const {
+  // @@protoc_insertion_point(field_list:proxy_proto.ObjectAndPlacement.blockids)
+  return _internal_blockids();
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+ObjectAndPlacement::_internal_mutable_blockids() {
+  return &_impl_.blockids_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedField< int32_t >*
+ObjectAndPlacement::mutable_blockids() {
+  // @@protoc_insertion_point(field_mutable_list:proxy_proto.ObjectAndPlacement.blockids)
+  return _internal_mutable_blockids();
+}
+
+// int32 block_size = 11;
 inline void ObjectAndPlacement::clear_block_size() {
   _impl_.block_size_ = 0;
 }
@@ -5635,7 +5769,7 @@ inline void ObjectAndPlacement::set_block_size(int32_t value) {
   // @@protoc_insertion_point(field_set:proxy_proto.ObjectAndPlacement.block_size)
 }
 
-// int32 encode_type = 11;
+// int32 encode_type = 12;
 inline void ObjectAndPlacement::clear_encode_type() {
   _impl_.encode_type_ = 0;
 }
@@ -5655,7 +5789,7 @@ inline void ObjectAndPlacement::set_encode_type(int32_t value) {
   // @@protoc_insertion_point(field_set:proxy_proto.ObjectAndPlacement.encode_type)
 }
 
-// string clientip = 12;
+// string clientip = 13;
 inline void ObjectAndPlacement::clear_clientip() {
   _impl_.clientip_.ClearToEmpty();
 }
@@ -5705,7 +5839,7 @@ inline void ObjectAndPlacement::set_allocated_clientip(std::string* clientip) {
   // @@protoc_insertion_point(field_set_allocated:proxy_proto.ObjectAndPlacement.clientip)
 }
 
-// int32 clientport = 13;
+// int32 clientport = 14;
 inline void ObjectAndPlacement::clear_clientport() {
   _impl_.clientport_ = 0;
 }

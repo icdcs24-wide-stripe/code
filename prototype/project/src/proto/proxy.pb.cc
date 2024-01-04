@@ -95,6 +95,8 @@ PROTOBUF_CONSTEXPR helpRecalPlan::helpRecalPlan(
   , /*decltype(_impl_.mainproxyport_)*/0
   , /*decltype(_impl_.block_size_)*/0
   , /*decltype(_impl_.parity_num_)*/0
+  , /*decltype(_impl_.k_)*/0
+  , /*decltype(_impl_.encodetype_)*/0
   , /*decltype(_impl_._cached_size_)*/{}} {}
 struct helpRecalPlanDefaultTypeInternal {
   PROTOBUF_CONSTEXPR helpRecalPlanDefaultTypeInternal()
@@ -227,6 +229,8 @@ PROTOBUF_CONSTEXPR ObjectAndPlacement::ObjectAndPlacement(
   , /*decltype(_impl_.datanodeport_)*/{}
   , /*decltype(_impl_._datanodeport_cached_byte_size_)*/{0}
   , /*decltype(_impl_.blockkeys_)*/{}
+  , /*decltype(_impl_.blockids_)*/{}
+  , /*decltype(_impl_._blockids_cached_byte_size_)*/{0}
   , /*decltype(_impl_.key_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.clientip_)*/{&::_pbi::fixed_address_empty_string, ::_pbi::ConstantInitialized{}}
   , /*decltype(_impl_.valuesizebyte_)*/0
@@ -334,6 +338,8 @@ const uint32_t TableStruct_proxy_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pr
   PROTOBUF_FIELD_OFFSET(::proxy_proto::helpRecalPlan, _impl_.block_size_),
   PROTOBUF_FIELD_OFFSET(::proxy_proto::helpRecalPlan, _impl_.blockids_),
   PROTOBUF_FIELD_OFFSET(::proxy_proto::helpRecalPlan, _impl_.parity_num_),
+  PROTOBUF_FIELD_OFFSET(::proxy_proto::helpRecalPlan, _impl_.k_),
+  PROTOBUF_FIELD_OFFSET(::proxy_proto::helpRecalPlan, _impl_.encodetype_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::proxy_proto::blockRelocPlan, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -414,6 +420,7 @@ const uint32_t TableStruct_proxy_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(pr
   PROTOBUF_FIELD_OFFSET(::proxy_proto::ObjectAndPlacement, _impl_.datanodeip_),
   PROTOBUF_FIELD_OFFSET(::proxy_proto::ObjectAndPlacement, _impl_.datanodeport_),
   PROTOBUF_FIELD_OFFSET(::proxy_proto::ObjectAndPlacement, _impl_.blockkeys_),
+  PROTOBUF_FIELD_OFFSET(::proxy_proto::ObjectAndPlacement, _impl_.blockids_),
   PROTOBUF_FIELD_OFFSET(::proxy_proto::ObjectAndPlacement, _impl_.block_size_),
   PROTOBUF_FIELD_OFFSET(::proxy_proto::ObjectAndPlacement, _impl_.encode_type_),
   PROTOBUF_FIELD_OFFSET(::proxy_proto::ObjectAndPlacement, _impl_.clientip_),
@@ -438,17 +445,17 @@ static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protode
   { 13, -1, -1, sizeof(::proxy_proto::mainRecalPlan)},
   { 32, -1, -1, sizeof(::proxy_proto::RecalReply)},
   { 39, -1, -1, sizeof(::proxy_proto::helpRecalPlan)},
-  { 55, -1, -1, sizeof(::proxy_proto::blockRelocPlan)},
-  { 67, -1, -1, sizeof(::proxy_proto::blockRelocReply)},
-  { 74, -1, -1, sizeof(::proxy_proto::AskIfSuccess)},
-  { 81, -1, -1, sizeof(::proxy_proto::RepIfSuccess)},
-  { 88, -1, -1, sizeof(::proxy_proto::NodeAndBlock)},
-  { 99, -1, -1, sizeof(::proxy_proto::DelReply)},
-  { 106, -1, -1, sizeof(::proxy_proto::CheckaliveCMD)},
-  { 113, -1, -1, sizeof(::proxy_proto::RequestResult)},
-  { 120, -1, -1, sizeof(::proxy_proto::ObjectAndPlacement)},
-  { 139, -1, -1, sizeof(::proxy_proto::SetReply)},
-  { 146, -1, -1, sizeof(::proxy_proto::GetReply)},
+  { 57, -1, -1, sizeof(::proxy_proto::blockRelocPlan)},
+  { 69, -1, -1, sizeof(::proxy_proto::blockRelocReply)},
+  { 76, -1, -1, sizeof(::proxy_proto::AskIfSuccess)},
+  { 83, -1, -1, sizeof(::proxy_proto::RepIfSuccess)},
+  { 90, -1, -1, sizeof(::proxy_proto::NodeAndBlock)},
+  { 101, -1, -1, sizeof(::proxy_proto::DelReply)},
+  { 108, -1, -1, sizeof(::proxy_proto::CheckaliveCMD)},
+  { 115, -1, -1, sizeof(::proxy_proto::RequestResult)},
+  { 122, -1, -1, sizeof(::proxy_proto::ObjectAndPlacement)},
+  { 142, -1, -1, sizeof(::proxy_proto::SetReply)},
+  { 149, -1, -1, sizeof(::proxy_proto::GetReply)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
@@ -482,51 +489,52 @@ const char descriptor_table_protodef_proxy_2eproto[] PROTOBUF_SECTION_VARIABLE(p
   " \001(\005\022\t\n\001l\030\010 \001(\005\022\013\n\003g_m\030\t \001(\005\022\022\n\nblock_si"
   "ze\030\n \001(\005\022\022\n\nencodetype\030\013 \001(\005\022\021\n\tstripe_i"
   "d\030\014 \001(\005\022\020\n\010group_id\030\r \001(\005\"\034\n\nRecalReply\022"
-  "\016\n\006result\030\001 \001(\t\"\335\001\n\rhelpRecalPlan\022\014\n\004typ"
+  "\016\n\006result\030\001 \001(\t\"\374\001\n\rhelpRecalPlan\022\014\n\004typ"
   "e\030\001 \001(\010\022\033\n\023if_partial_decoding\030\002 \001(\010\022\023\n\013"
   "mainproxyip\030\003 \001(\t\022\025\n\rmainproxyport\030\004 \001(\005"
   "\022\022\n\ndatanodeip\030\005 \003(\t\022\024\n\014datanodeport\030\006 \003"
   "(\005\022\021\n\tblockkeys\030\007 \003(\t\022\022\n\nblock_size\030\010 \001("
-  "\005\022\020\n\010blockids\030\t \003(\005\022\022\n\nparity_num\030\n \001(\005\""
-  "\231\001\n\016blockRelocPlan\022\023\n\013blocktomove\030\001 \003(\t\022"
-  "\026\n\016fromdatanodeip\030\002 \003(\t\022\030\n\020fromdatanodep"
-  "ort\030\003 \003(\005\022\024\n\014todatanodeip\030\004 \003(\t\022\026\n\016todat"
-  "anodeport\030\005 \003(\005\022\022\n\nblock_size\030\006 \001(\005\"!\n\017b"
-  "lockRelocReply\022\016\n\006result\030\001 \001(\t\"\034\n\014AskIfS"
-  "uccess\022\014\n\004step\030\001 \001(\005\"!\n\014RepIfSuccess\022\021\n\t"
-  "ifsuccess\030\001 \001(\010\"k\n\014NodeAndBlock\022\021\n\tblock"
-  "keys\030\001 \003(\t\022\022\n\ndatanodeip\030\002 \003(\t\022\024\n\014datano"
-  "deport\030\003 \003(\005\022\021\n\tstripe_id\030\004 \001(\005\022\013\n\003key\030\005"
-  " \001(\t\"\034\n\010DelReply\022\020\n\010ifcommit\030\001 \001(\010\"\035\n\rCh"
-  "eckaliveCMD\022\014\n\004name\030\001 \001(\t\" \n\rRequestResu"
-  "lt\022\017\n\007message\030\001 \001(\010\"\372\001\n\022ObjectAndPlaceme"
-  "nt\022\013\n\003key\030\001 \001(\t\022\025\n\rvaluesizebyte\030\002 \001(\005\022\t"
-  "\n\001k\030\003 \001(\005\022\t\n\001l\030\004 \001(\005\022\013\n\003g_m\030\005 \001(\005\022\021\n\tstr"
-  "ipe_id\030\006 \001(\005\022\022\n\ndatanodeip\030\007 \003(\t\022\024\n\014data"
-  "nodeport\030\010 \003(\005\022\021\n\tblockkeys\030\t \003(\t\022\022\n\nblo"
-  "ck_size\030\n \001(\005\022\023\n\013encode_type\030\013 \001(\005\022\020\n\010cl"
-  "ientip\030\014 \001(\t\022\022\n\nclientport\030\r \001(\005\"\034\n\010SetR"
-  "eply\022\020\n\010ifcommit\030\001 \001(\010\"\036\n\010GetReply\022\022\n\nge"
-  "tsuccess\030\001 \001(\0102\301\004\n\014proxyService\022D\n\ncheck"
-  "alive\022\032.proxy_proto.CheckaliveCMD\032\032.prox"
-  "y_proto.RequestResult\022L\n\022encodeAndSetObj"
-  "ect\022\037.proxy_proto.ObjectAndPlacement\032\025.p"
-  "roxy_proto.SetReply\022L\n\022decodeAndGetObjec"
-  "t\022\037.proxy_proto.ObjectAndPlacement\032\025.pro"
-  "xy_proto.GetReply\022\?\n\013deleteBlock\022\031.proxy"
-  "_proto.NodeAndBlock\032\025.proxy_proto.DelRep"
-  "ly\022@\n\tmainRecal\022\032.proxy_proto.mainRecalP"
-  "lan\032\027.proxy_proto.RecalReply\022@\n\thelpReca"
-  "l\022\032.proxy_proto.helpRecalPlan\032\027.proxy_pr"
-  "oto.RecalReply\022G\n\nblockReloc\022\033.proxy_pro"
-  "to.blockRelocPlan\032\034.proxy_proto.blockRel"
-  "ocReply\022A\n\tcheckStep\022\031.proxy_proto.AskIf"
-  "Success\032\031.proxy_proto.RepIfSuccessb\006prot"
-  "o3"
+  "\005\022\020\n\010blockids\030\t \003(\005\022\022\n\nparity_num\030\n \001(\005\022"
+  "\t\n\001k\030\013 \001(\005\022\022\n\nencodetype\030\014 \001(\005\"\231\001\n\016block"
+  "RelocPlan\022\023\n\013blocktomove\030\001 \003(\t\022\026\n\016fromda"
+  "tanodeip\030\002 \003(\t\022\030\n\020fromdatanodeport\030\003 \003(\005"
+  "\022\024\n\014todatanodeip\030\004 \003(\t\022\026\n\016todatanodeport"
+  "\030\005 \003(\005\022\022\n\nblock_size\030\006 \001(\005\"!\n\017blockReloc"
+  "Reply\022\016\n\006result\030\001 \001(\t\"\034\n\014AskIfSuccess\022\014\n"
+  "\004step\030\001 \001(\005\"!\n\014RepIfSuccess\022\021\n\tifsuccess"
+  "\030\001 \001(\010\"k\n\014NodeAndBlock\022\021\n\tblockkeys\030\001 \003("
+  "\t\022\022\n\ndatanodeip\030\002 \003(\t\022\024\n\014datanodeport\030\003 "
+  "\003(\005\022\021\n\tstripe_id\030\004 \001(\005\022\013\n\003key\030\005 \001(\t\"\034\n\010D"
+  "elReply\022\020\n\010ifcommit\030\001 \001(\010\"\035\n\rCheckaliveC"
+  "MD\022\014\n\004name\030\001 \001(\t\" \n\rRequestResult\022\017\n\007mes"
+  "sage\030\001 \001(\010\"\214\002\n\022ObjectAndPlacement\022\013\n\003key"
+  "\030\001 \001(\t\022\025\n\rvaluesizebyte\030\002 \001(\005\022\t\n\001k\030\003 \001(\005"
+  "\022\t\n\001l\030\004 \001(\005\022\013\n\003g_m\030\005 \001(\005\022\021\n\tstripe_id\030\006 "
+  "\001(\005\022\022\n\ndatanodeip\030\007 \003(\t\022\024\n\014datanodeport\030"
+  "\010 \003(\005\022\021\n\tblockkeys\030\t \003(\t\022\020\n\010blockids\030\n \003"
+  "(\005\022\022\n\nblock_size\030\013 \001(\005\022\023\n\013encode_type\030\014 "
+  "\001(\005\022\020\n\010clientip\030\r \001(\t\022\022\n\nclientport\030\016 \001("
+  "\005\"\034\n\010SetReply\022\020\n\010ifcommit\030\001 \001(\010\"\036\n\010GetRe"
+  "ply\022\022\n\ngetsuccess\030\001 \001(\0102\301\004\n\014proxyService"
+  "\022D\n\ncheckalive\022\032.proxy_proto.CheckaliveC"
+  "MD\032\032.proxy_proto.RequestResult\022L\n\022encode"
+  "AndSetObject\022\037.proxy_proto.ObjectAndPlac"
+  "ement\032\025.proxy_proto.SetReply\022L\n\022decodeAn"
+  "dGetObject\022\037.proxy_proto.ObjectAndPlacem"
+  "ent\032\025.proxy_proto.GetReply\022\?\n\013deleteBloc"
+  "k\022\031.proxy_proto.NodeAndBlock\032\025.proxy_pro"
+  "to.DelReply\022@\n\tmainRecal\022\032.proxy_proto.m"
+  "ainRecalPlan\032\027.proxy_proto.RecalReply\022@\n"
+  "\thelpRecal\022\032.proxy_proto.helpRecalPlan\032\027"
+  ".proxy_proto.RecalReply\022G\n\nblockReloc\022\033."
+  "proxy_proto.blockRelocPlan\032\034.proxy_proto"
+  ".blockRelocReply\022A\n\tcheckStep\022\031.proxy_pr"
+  "oto.AskIfSuccess\032\031.proxy_proto.RepIfSucc"
+  "essb\006proto3"
   ;
 static ::_pbi::once_flag descriptor_table_proxy_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_proxy_2eproto = {
-    false, false, 2082, descriptor_table_protodef_proxy_2eproto,
+    false, false, 2131, descriptor_table_protodef_proxy_2eproto,
     "proxy.proto",
     &descriptor_table_proxy_2eproto_once, nullptr, 0, 15,
     schemas, file_default_instances, TableStruct_proxy_2eproto::offsets,
@@ -1730,6 +1738,8 @@ helpRecalPlan::helpRecalPlan(const helpRecalPlan& from)
     , decltype(_impl_.mainproxyport_){}
     , decltype(_impl_.block_size_){}
     , decltype(_impl_.parity_num_){}
+    , decltype(_impl_.k_){}
+    , decltype(_impl_.encodetype_){}
     , /*decltype(_impl_._cached_size_)*/{}};
 
   _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
@@ -1742,8 +1752,8 @@ helpRecalPlan::helpRecalPlan(const helpRecalPlan& from)
       _this->GetArenaForAllocation());
   }
   ::memcpy(&_impl_.type_, &from._impl_.type_,
-    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.parity_num_) -
-    reinterpret_cast<char*>(&_impl_.type_)) + sizeof(_impl_.parity_num_));
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.encodetype_) -
+    reinterpret_cast<char*>(&_impl_.type_)) + sizeof(_impl_.encodetype_));
   // @@protoc_insertion_point(copy_constructor:proxy_proto.helpRecalPlan)
 }
 
@@ -1764,6 +1774,8 @@ inline void helpRecalPlan::SharedCtor(
     , decltype(_impl_.mainproxyport_){0}
     , decltype(_impl_.block_size_){0}
     , decltype(_impl_.parity_num_){0}
+    , decltype(_impl_.k_){0}
+    , decltype(_impl_.encodetype_){0}
     , /*decltype(_impl_._cached_size_)*/{}
   };
   _impl_.mainproxyip_.InitDefault();
@@ -1806,8 +1818,8 @@ void helpRecalPlan::Clear() {
   _impl_.blockids_.Clear();
   _impl_.mainproxyip_.ClearToEmpty();
   ::memset(&_impl_.type_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&_impl_.parity_num_) -
-      reinterpret_cast<char*>(&_impl_.type_)) + sizeof(_impl_.parity_num_));
+      reinterpret_cast<char*>(&_impl_.encodetype_) -
+      reinterpret_cast<char*>(&_impl_.type_)) + sizeof(_impl_.encodetype_));
   _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
 }
 
@@ -1919,6 +1931,22 @@ const char* helpRecalPlan::_InternalParse(const char* ptr, ::_pbi::ParseContext*
         } else
           goto handle_unusual;
         continue;
+      // int32 k = 11;
+      case 11:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 88)) {
+          _impl_.k_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 encodetype = 12;
+      case 12:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 96)) {
+          _impl_.encodetype_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
       default:
         goto handle_unusual;
     }  // switch
@@ -2026,6 +2054,18 @@ uint8_t* helpRecalPlan::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteInt32ToArray(10, this->_internal_parity_num(), target);
   }
 
+  // int32 k = 11;
+  if (this->_internal_k() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(11, this->_internal_k(), target);
+  }
+
+  // int32 encodetype = 12;
+  if (this->_internal_encodetype() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(12, this->_internal_encodetype(), target);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -2118,6 +2158,16 @@ size_t helpRecalPlan::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_parity_num());
   }
 
+  // int32 k = 11;
+  if (this->_internal_k() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_k());
+  }
+
+  // int32 encodetype = 12;
+  if (this->_internal_encodetype() != 0) {
+    total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_encodetype());
+  }
+
   return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
 }
 
@@ -2158,6 +2208,12 @@ void helpRecalPlan::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::
   if (from._internal_parity_num() != 0) {
     _this->_internal_set_parity_num(from._internal_parity_num());
   }
+  if (from._internal_k() != 0) {
+    _this->_internal_set_k(from._internal_k());
+  }
+  if (from._internal_encodetype() != 0) {
+    _this->_internal_set_encodetype(from._internal_encodetype());
+  }
   _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
 }
 
@@ -2186,8 +2242,8 @@ void helpRecalPlan::InternalSwap(helpRecalPlan* other) {
       &other->_impl_.mainproxyip_, rhs_arena
   );
   ::PROTOBUF_NAMESPACE_ID::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(helpRecalPlan, _impl_.parity_num_)
-      + sizeof(helpRecalPlan::_impl_.parity_num_)
+      PROTOBUF_FIELD_OFFSET(helpRecalPlan, _impl_.encodetype_)
+      + sizeof(helpRecalPlan::_impl_.encodetype_)
       - PROTOBUF_FIELD_OFFSET(helpRecalPlan, _impl_.type_)>(
           reinterpret_cast<char*>(&_impl_.type_),
           reinterpret_cast<char*>(&other->_impl_.type_));
@@ -4066,6 +4122,8 @@ ObjectAndPlacement::ObjectAndPlacement(const ObjectAndPlacement& from)
     , decltype(_impl_.datanodeport_){from._impl_.datanodeport_}
     , /*decltype(_impl_._datanodeport_cached_byte_size_)*/{0}
     , decltype(_impl_.blockkeys_){from._impl_.blockkeys_}
+    , decltype(_impl_.blockids_){from._impl_.blockids_}
+    , /*decltype(_impl_._blockids_cached_byte_size_)*/{0}
     , decltype(_impl_.key_){}
     , decltype(_impl_.clientip_){}
     , decltype(_impl_.valuesizebyte_){}
@@ -4110,6 +4168,8 @@ inline void ObjectAndPlacement::SharedCtor(
     , decltype(_impl_.datanodeport_){arena}
     , /*decltype(_impl_._datanodeport_cached_byte_size_)*/{0}
     , decltype(_impl_.blockkeys_){arena}
+    , decltype(_impl_.blockids_){arena}
+    , /*decltype(_impl_._blockids_cached_byte_size_)*/{0}
     , decltype(_impl_.key_){}
     , decltype(_impl_.clientip_){}
     , decltype(_impl_.valuesizebyte_){0}
@@ -4146,6 +4206,7 @@ inline void ObjectAndPlacement::SharedDtor() {
   _impl_.datanodeip_.~RepeatedPtrField();
   _impl_.datanodeport_.~RepeatedField();
   _impl_.blockkeys_.~RepeatedPtrField();
+  _impl_.blockids_.~RepeatedField();
   _impl_.key_.Destroy();
   _impl_.clientip_.Destroy();
 }
@@ -4163,6 +4224,7 @@ void ObjectAndPlacement::Clear() {
   _impl_.datanodeip_.Clear();
   _impl_.datanodeport_.Clear();
   _impl_.blockkeys_.Clear();
+  _impl_.blockids_.Clear();
   _impl_.key_.ClearToEmpty();
   _impl_.clientip_.ClearToEmpty();
   ::memset(&_impl_.valuesizebyte_, 0, static_cast<size_t>(
@@ -4268,25 +4330,36 @@ const char* ObjectAndPlacement::_InternalParse(const char* ptr, ::_pbi::ParseCon
         } else
           goto handle_unusual;
         continue;
-      // int32 block_size = 10;
+      // repeated int32 blockids = 10;
       case 10:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 80)) {
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 82)) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::PackedInt32Parser(_internal_mutable_blockids(), ptr, ctx);
+          CHK_(ptr);
+        } else if (static_cast<uint8_t>(tag) == 80) {
+          _internal_add_blockids(::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr));
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // int32 block_size = 11;
+      case 11:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 88)) {
           _impl_.block_size_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // int32 encode_type = 11;
-      case 11:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 88)) {
+      // int32 encode_type = 12;
+      case 12:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 96)) {
           _impl_.encode_type_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // string clientip = 12;
-      case 12:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 98)) {
+      // string clientip = 13;
+      case 13:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 106)) {
           auto str = _internal_mutable_clientip();
           ptr = ::_pbi::InlineGreedyStringParser(str, ptr, ctx);
           CHK_(ptr);
@@ -4294,9 +4367,9 @@ const char* ObjectAndPlacement::_InternalParse(const char* ptr, ::_pbi::ParseCon
         } else
           goto handle_unusual;
         continue;
-      // int32 clientport = 13;
-      case 13:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 104)) {
+      // int32 clientport = 14;
+      case 14:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 112)) {
           _impl_.clientport_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
           CHK_(ptr);
         } else
@@ -4400,32 +4473,41 @@ uint8_t* ObjectAndPlacement::_InternalSerialize(
     target = stream->WriteString(9, s, target);
   }
 
-  // int32 block_size = 10;
+  // repeated int32 blockids = 10;
+  {
+    int byte_size = _impl_._blockids_cached_byte_size_.load(std::memory_order_relaxed);
+    if (byte_size > 0) {
+      target = stream->WriteInt32Packed(
+          10, _internal_blockids(), byte_size, target);
+    }
+  }
+
+  // int32 block_size = 11;
   if (this->_internal_block_size() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(10, this->_internal_block_size(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(11, this->_internal_block_size(), target);
   }
 
-  // int32 encode_type = 11;
+  // int32 encode_type = 12;
   if (this->_internal_encode_type() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(11, this->_internal_encode_type(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(12, this->_internal_encode_type(), target);
   }
 
-  // string clientip = 12;
+  // string clientip = 13;
   if (!this->_internal_clientip().empty()) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
       this->_internal_clientip().data(), static_cast<int>(this->_internal_clientip().length()),
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "proxy_proto.ObjectAndPlacement.clientip");
     target = stream->WriteStringMaybeAliased(
-        12, this->_internal_clientip(), target);
+        13, this->_internal_clientip(), target);
   }
 
-  // int32 clientport = 13;
+  // int32 clientport = 14;
   if (this->_internal_clientport() != 0) {
     target = stream->EnsureSpace(target);
-    target = ::_pbi::WireFormatLite::WriteInt32ToArray(13, this->_internal_clientport(), target);
+    target = ::_pbi::WireFormatLite::WriteInt32ToArray(14, this->_internal_clientport(), target);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -4474,6 +4556,20 @@ size_t ObjectAndPlacement::ByteSizeLong() const {
       _impl_.blockkeys_.Get(i));
   }
 
+  // repeated int32 blockids = 10;
+  {
+    size_t data_size = ::_pbi::WireFormatLite::
+      Int32Size(this->_impl_.blockids_);
+    if (data_size > 0) {
+      total_size += 1 +
+        ::_pbi::WireFormatLite::Int32Size(static_cast<int32_t>(data_size));
+    }
+    int cached_size = ::_pbi::ToCachedSize(data_size);
+    _impl_._blockids_cached_byte_size_.store(cached_size,
+                                    std::memory_order_relaxed);
+    total_size += data_size;
+  }
+
   // string key = 1;
   if (!this->_internal_key().empty()) {
     total_size += 1 +
@@ -4481,7 +4577,7 @@ size_t ObjectAndPlacement::ByteSizeLong() const {
         this->_internal_key());
   }
 
-  // string clientip = 12;
+  // string clientip = 13;
   if (!this->_internal_clientip().empty()) {
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
@@ -4513,17 +4609,17 @@ size_t ObjectAndPlacement::ByteSizeLong() const {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_stripe_id());
   }
 
-  // int32 block_size = 10;
+  // int32 block_size = 11;
   if (this->_internal_block_size() != 0) {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_block_size());
   }
 
-  // int32 encode_type = 11;
+  // int32 encode_type = 12;
   if (this->_internal_encode_type() != 0) {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_encode_type());
   }
 
-  // int32 clientport = 13;
+  // int32 clientport = 14;
   if (this->_internal_clientport() != 0) {
     total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(this->_internal_clientport());
   }
@@ -4549,6 +4645,7 @@ void ObjectAndPlacement::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, con
   _this->_impl_.datanodeip_.MergeFrom(from._impl_.datanodeip_);
   _this->_impl_.datanodeport_.MergeFrom(from._impl_.datanodeport_);
   _this->_impl_.blockkeys_.MergeFrom(from._impl_.blockkeys_);
+  _this->_impl_.blockids_.MergeFrom(from._impl_.blockids_);
   if (!from._internal_key().empty()) {
     _this->_internal_set_key(from._internal_key());
   }
@@ -4601,6 +4698,7 @@ void ObjectAndPlacement::InternalSwap(ObjectAndPlacement* other) {
   _impl_.datanodeip_.InternalSwap(&other->_impl_.datanodeip_);
   _impl_.datanodeport_.InternalSwap(&other->_impl_.datanodeport_);
   _impl_.blockkeys_.InternalSwap(&other->_impl_.blockkeys_);
+  _impl_.blockids_.InternalSwap(&other->_impl_.blockids_);
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::InternalSwap(
       &_impl_.key_, lhs_arena,
       &other->_impl_.key_, rhs_arena

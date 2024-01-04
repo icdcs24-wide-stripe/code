@@ -89,7 +89,6 @@ namespace ECProject
   {
     try
     {
-      
       grpc::ClientContext context;
       datanode_proto::SetInfo set_info;
       datanode_proto::RequestResult result;
@@ -97,6 +96,7 @@ namespace ECProject
       set_info.set_block_size(value_length);
       set_info.set_proxy_ip(m_ip);
       set_info.set_proxy_port(m_port + offset);
+      set_info.set_ispull(false);
       std::string node_ip_port = std::string(ip) + ":" + std::to_string(port);
       grpc::Status stat = m_datanode_ptrs[node_ip_port]->handleSet(&context, set_info, &result);
 
@@ -139,7 +139,7 @@ namespace ECProject
       if (IF_DEBUG)
       {
         std::cout << "[Proxy" << m_self_cluster_id << "][GET]"
-                  << "Ready to recieve data from datanode " << std::endl;
+                  << " Ready to recieve data from datanode " << std::endl;
       }
 
       grpc::ClientContext context;
@@ -154,7 +154,7 @@ namespace ECProject
       if (IF_DEBUG)
       {
         std::cout << "[Proxy" << m_self_cluster_id << "][GET]"
-                  << "Call datanode to handle get " << key << std::endl;
+                  << " Call datanode to handle get " << key << std::endl;
       }
 
       asio::io_context io_context;
@@ -169,7 +169,7 @@ namespace ECProject
       if (IF_DEBUG)
       {
         std::cout << "[Proxy" << m_self_cluster_id << "][GET]"
-                  << "Read data from socket with length of " << value_length << std::endl;
+                  << " Read data from socket with length of " << value_length << std::endl;
       }
       memcpy(value, buf, value_length);
       delete buf;
@@ -201,6 +201,52 @@ namespace ECProject
       std::cerr << e.what() << '\n';
     }
 
+    return true;
+  }
+
+  bool ProxyImpl::BlockRelocation(const char *key, size_t value_length, const char *src_ip, int src_port, const char *des_ip, int des_port)
+  {
+    try
+    {
+      grpc::ClientContext context;
+      datanode_proto::GetInfo get_info;
+      datanode_proto::RequestResult result;
+      get_info.set_block_key(std::string(key));
+      get_info.set_block_size(value_length);
+      get_info.set_proxy_ip(m_ip);
+      get_info.set_proxy_port(m_port);
+      std::string s_node_ip_port = std::string(src_ip) + ":" + std::to_string(src_port);
+      grpc::Status stat = m_datanode_ptrs[s_node_ip_port]->handleGet(&context, get_info, &result);
+      if (IF_DEBUG)
+      {
+        std::cout << "[Proxy" << m_self_cluster_id << "][Relocation]"
+                  << " Call datanode" << src_port << " to handle get " << key << std::endl;
+      }
+
+      grpc::ClientContext s_context;
+      datanode_proto::SetInfo set_info;
+      datanode_proto::RequestResult s_result;
+      set_info.set_block_key(std::string(key));
+      set_info.set_block_size(value_length);
+      set_info.set_proxy_ip(src_ip);
+      set_info.set_proxy_port(src_port + 20);
+      set_info.set_ispull(true);
+      std::string d_node_ip_port = std::string(des_ip) + ":" + std::to_string(des_port);
+      grpc::Status s_stat = m_datanode_ptrs[d_node_ip_port]->handleSet(&s_context, set_info, &s_result);
+      if (IF_DEBUG)
+      {
+        std::cout << "[Proxy" << m_self_cluster_id << "][Relocation]"
+                  << " Call datanode" << des_port << " to handle set " << key << std::endl;
+      }
+      if (s_stat.ok() && IF_DEBUG)
+      {
+        std::cout << "[Proxy" << m_self_cluster_id << "][Relocation] relocate block " << key << " success!" << std::endl;
+      }
+    }
+    catch (const std::exception &e)
+    {
+      std::cerr << e.what() << '\n';
+    }
     return true;
   }
 
@@ -402,20 +448,21 @@ namespace ECProject
     int stripe_id = object_and_placement->stripe_id();
 
     std::vector<std::pair<std::string, std::pair<std::string, int>>> keys_nodes;
+    std::vector<int> block_idxs;
     for (int i = 0; i < object_and_placement->datanodeip_size(); i++)
     {
+      block_idxs.push_back(object_and_placement->blockids(i));
       keys_nodes.push_back(std::make_pair(object_and_placement->blockkeys(i), std::make_pair(object_and_placement->datanodeip(i), object_and_placement->datanodeport(i))));
     }
 
     auto decode_and_get = [this, key, k, g_m, l, block_size, value_size_bytes, stripe_id,
-                           clientip, clientport, keys_nodes, encode_type]() mutable
+                           clientip, clientport, keys_nodes, block_idxs, encode_type]() mutable
     {
       int expect_block_number = (encode_type == Azure_LRC) ? (k + l) : k;
       int all_expect_blocks = (encode_type == Azure_LRC) ? (k + g_m + l) : (k + g_m);
-      
 
       auto blocks_ptr = std::make_shared<std::vector<std::vector<char>>>();
-      auto blocks_id_ptr = std::make_shared<std::vector<std::string>>();
+      auto blocks_key_ptr = std::make_shared<std::vector<std::string>>();
       auto blocks_idx_ptr = std::make_shared<std::vector<int>>();
       auto myLock_ptr = std::make_shared<std::mutex>();
       auto cv_ptr = std::make_shared<std::condition_variable>();
@@ -425,12 +472,12 @@ namespace ECProject
       char **data = v_data.data();
       char **coding = v_coding.data();
 
-      auto getFromNode = [this, k, blocks_ptr, blocks_id_ptr, blocks_idx_ptr, myLock_ptr, cv_ptr](int expect_block_number, int block_idx, std::string block_key, int block_size, std::string ip, int port)
+      auto getFromNode = [this, k, blocks_ptr, blocks_key_ptr, blocks_idx_ptr, myLock_ptr, cv_ptr](int expect_block_number, int block_idx, std::string block_key, int block_size, std::string ip, int port)
       {
         if (IF_DEBUG)
         {
           std::cout << "[Proxy" << m_self_cluster_id << "][GET]"
-                    << "Thread " << block_idx << " get " << block_key << " from Datanode" << ip << ":" << port << std::endl;
+                    << "Block " << block_idx << " with key " << block_key << " from Datanode" << ip << ":" << port << std::endl;
         }
 
         std::vector<char> temp(block_size);
@@ -446,7 +493,7 @@ namespace ECProject
         if (!check_received_block(k, expect_block_number, blocks_idx_ptr, blocks_ptr->size()))
         {
           blocks_ptr->push_back(temp);
-          blocks_id_ptr->push_back(block_key);
+          blocks_key_ptr->push_back(block_key);
           blocks_idx_ptr->push_back(block_idx);
           if (check_received_block(k, expect_block_number, blocks_idx_ptr, blocks_ptr->size()))
           {
@@ -455,7 +502,7 @@ namespace ECProject
         }
         // get all the blocks
         // blocks_ptr->push_back(temp);
-        // blocks_id_ptr->push_back(block_key);
+        // blocks_key_ptr->push_back(block_key);
         // blocks_idx_ptr->push_back(block_idx);
         myLock_ptr->unlock();
       };
@@ -479,14 +526,15 @@ namespace ECProject
       // for (int j = 0; j < k; j++)
       for (int j = 0; j < all_expect_blocks; j++)
       {
+        int block_idx = block_idxs[j];
         std::string block_key = keys_nodes[j].first;
         std::pair<std::string, int> &ip_and_port = keys_nodes[j].second;
         // std::vector<char> temp(block_size);
         // GetFromDatanode(block_key.c_str(), block_key.size(), temp.data(), block_size, ip_and_port.first.c_str(), ip_and_port.second, j + 2);
         // blocks_ptr->push_back(temp);
-        // blocks_id_ptr->push_back(block_key);
+        // blocks_key_ptr->push_back(block_key);
         // blocks_idx_ptr->push_back(j);
-        read_treads.push_back(std::thread(getFromNode, expect_block_number, j, block_key, block_size, ip_and_port.first, ip_and_port.second));
+        read_treads.push_back(std::thread(getFromNode, expect_block_number, block_idx, block_key, block_size, ip_and_port.first, ip_and_port.second));
       }
       for (int j = 0; j < all_expect_blocks; j++)
       {
@@ -668,6 +716,8 @@ namespace ECProject
       bool if_g_recal = main_recal_plan->type();
       int block_size = main_recal_plan->block_size();
       int stripe_id = main_recal_plan->stripe_id();
+      int k = main_recal_plan->k();
+      ECProject::EncodeType encode_type = (ECProject::EncodeType)main_recal_plan->encodetype();
       std::string recal_type = "";
       // for parity blocks
       std::vector<std::string> p_datanode_ip;
@@ -679,6 +729,7 @@ namespace ECProject
       std::vector<std::string> l_datanode_ip;
       std::vector<int> l_datanode_port;
       std::vector<std::string> l_blockkeys;
+      std::vector<int> l_blockids;
       // get the meta information
       for (int i = 0; i < main_recal_plan->p_blockkeys_size(); i++)
       {
@@ -715,6 +766,7 @@ namespace ECProject
           temp.set_proxy_port(main_recal_plan->clusters(i).proxy_port());
           for (int j = 0; j < main_recal_plan->clusters(i).blockkeys_size(); j++)
           {
+            temp.add_blockids(main_recal_plan->clusters(i).blockids(j));
             temp.add_blockkeys(main_recal_plan->clusters(i).blockkeys(j));
             temp.add_datanodeip(main_recal_plan->clusters(i).datanodeip(j));
             temp.add_datanodeport(main_recal_plan->clusters(i).datanodeport(j));
@@ -725,6 +777,7 @@ namespace ECProject
         {
           for (int j = 0; j < main_recal_plan->clusters(i).blockkeys_size(); j++)
           {
+            l_blockids.push_back(main_recal_plan->clusters(i).blockids(j));
             l_blockkeys.push_back(main_recal_plan->clusters(i).blockkeys(j));
             l_datanode_ip.push_back(main_recal_plan->clusters(i).datanodeip(j));
             l_datanode_port.push_back(main_recal_plan->clusters(i).datanodeport(j));
@@ -736,9 +789,9 @@ namespace ECProject
       {
         auto lock_ptr = std::make_shared<std::mutex>();
         auto blocks_ptr = std::make_shared<std::vector<std::vector<char>>>();
-        auto blocks_id_ptr = std::make_shared<std::vector<std::string>>();
+        auto blocks_key_ptr = std::make_shared<std::vector<std::string>>();
         auto blocks_idx_ptr = std::make_shared<std::vector<int>>();
-        auto getFromNode = [this, blocks_ptr, blocks_id_ptr, blocks_idx_ptr, lock_ptr](int block_idx, std::string block_key, int block_size, std::string node_ip, int node_port) mutable
+        auto getFromNode = [this, blocks_ptr, blocks_key_ptr, blocks_idx_ptr, lock_ptr](int block_idx, std::string block_key, int block_size, std::string node_ip, int node_port) mutable
         {
           std::vector<char> temp(block_size);
           bool ret = GetFromDatanode(block_key.c_str(), block_key.size(), temp.data(), block_size, node_ip.c_str(), node_port, block_idx + 2);
@@ -749,7 +802,7 @@ namespace ECProject
           }
           lock_ptr->lock();
           blocks_ptr->push_back(temp);
-          blocks_id_ptr->push_back(block_key);
+          blocks_key_ptr->push_back(block_key);
           blocks_idx_ptr->push_back(block_idx);
           lock_ptr->unlock();
         };
@@ -758,8 +811,8 @@ namespace ECProject
         auto m_blocks_ptr = std::make_shared<std::vector<std::vector<char>>>();
         auto m_blocks_idx_ptr = std::make_shared<std::vector<int>>();
         auto h_blocks_ptr = std::make_shared<std::vector<std::vector<char>>>();
-        auto h_blocks_id_ptr = std::make_shared<std::vector<std::string>>();
-        auto getFromProxy = [this, recal_type, p_lock_ptr, m_blocks_ptr, m_blocks_idx_ptr, h_blocks_ptr, h_blocks_id_ptr, block_size, if_partial_decoding, new_parity_num](int block_key_size, std::shared_ptr<asio::ip::tcp::socket> socket_ptr) mutable
+        auto h_blocks_idx_ptr = std::make_shared<std::vector<int>>();
+        auto getFromProxy = [this, recal_type, p_lock_ptr, m_blocks_ptr, m_blocks_idx_ptr, h_blocks_ptr, h_blocks_idx_ptr, block_size, if_partial_decoding, new_parity_num](int block_key_size, std::shared_ptr<asio::ip::tcp::socket> socket_ptr) mutable
         {
           try
           {
@@ -790,13 +843,16 @@ namespace ECProject
               int block_num = ECProject::bytes_to_int(int_buf_num_of_blocks);
               for (int j = 0; j < block_num; j++)
               {
-                std::vector<char> tmp_key(block_key_size);
+                // std::vector<char> tmp_key(block_key_size);
                 std::vector<char> tmp_val(block_size);
-                asio::read(*socket_ptr, asio::buffer(tmp_key.data(), block_key_size), ec);
+                std::vector<unsigned char> byte_block_id(sizeof(int));
+                asio::read(*socket_ptr, asio::buffer(byte_block_id, byte_block_id.size()), ec);
+                int block_idx = ECProject::bytes_to_int(byte_block_id);
+                // asio::read(*socket_ptr, asio::buffer(tmp_key.data(), block_key_size), ec);
                 asio::read(*socket_ptr, asio::buffer(tmp_val.data(), block_size), ec);
                 p_lock_ptr->lock();
                 h_blocks_ptr->push_back(tmp_val);
-                h_blocks_id_ptr->push_back(tmp_key.data());
+                h_blocks_idx_ptr->push_back(block_idx);
                 p_lock_ptr->unlock();
               }
             }
@@ -864,13 +920,20 @@ namespace ECProject
           }
           if (if_partial_decoding) // partial encoding
           {
-            std::vector<int> new_matrix(new_parity_num * l_block_num, 1);
             std::vector<std::vector<char>> v_coding_area(new_parity_num, std::vector<char>(block_size));
             for (int j = 0; j < new_parity_num; j++)
             {
               coding[j] = v_coding_area[j].data();
             }
-            jerasure_matrix_encode(l_block_num, new_parity_num, 8, new_matrix.data(), data, coding, block_size);
+            if(if_g_recal)
+            {
+              encode_partial_blocks_for_gr(k, new_parity_num, data, coding, block_size, blocks_idx_ptr, l_block_num, encode_type);
+            }
+            else
+            {
+              perform_addition(data, coding, block_size, l_block_num, new_parity_num);
+            }
+            
             p_lock_ptr->lock();
             for (int j = 0; j < new_parity_num; j++)
             {
@@ -884,7 +947,7 @@ namespace ECProject
             for (int j = 0; j < l_block_num; j++)
             {
               p_lock_ptr->lock();
-              h_blocks_id_ptr->push_back((*blocks_id_ptr)[j]);
+              h_blocks_idx_ptr->push_back((*blocks_idx_ptr)[j]);
               h_blocks_ptr->push_back((*blocks_ptr)[j]);
               p_lock_ptr->unlock();
             }
@@ -964,9 +1027,23 @@ namespace ECProject
         }
         if (if_partial_decoding)
         {
-          for (int j = 0; j < count; j++)
+          if(if_g_recal)
           {
-            memcpy(t_data[j], (*m_blocks_ptr)[j].data(), block_size);
+            int index = 0;
+            for(int j = 0; j < m_num; j++)
+            {
+              for(int jj = 0; jj < new_parity_num; jj++)
+              {
+                memcpy(t_data[index++], (*m_blocks_ptr)[jj * new_parity_num + j].data(), block_size);
+              }
+            }
+          }
+          else
+          {
+            for(int j = 0; j < count; j++)
+            {
+              memcpy(t_data[j], (*m_blocks_ptr)[j].data(), block_size);
+            }
           }
         }
         else
@@ -978,21 +1055,29 @@ namespace ECProject
         }
         // clear
         blocks_ptr->clear();
-        blocks_id_ptr->clear();
+        blocks_key_ptr->clear();
         blocks_idx_ptr->clear();
         m_blocks_ptr->clear();
-        h_blocks_id_ptr->clear();
+        h_blocks_idx_ptr->clear();
         m_blocks_idx_ptr->clear();
         h_blocks_ptr->clear();
-        std::vector<int> new_matrix(new_parity_num * count, 1);
+        
         if (IF_DEBUG)
         {
           std::cout << recal_type << "[Main Proxy" << m_self_cluster_id << "] encoding!" << std::endl;
         }
         try
         {
-          jerasure_matrix_encode(count, new_parity_num, 8, new_matrix.data(), t_data, t_coding, block_size);
+          if(if_partial_decoding || !if_g_recal)
+          {
+            perform_addition(t_data, t_coding, block_size, count, new_parity_num);
+          }
+          else
+          {
+            encode_partial_blocks_for_gr(k, g_m, t_data, t_coding, block_size, h_blocks_idx_ptr, count, encode_type);
+          }
         }
+
         catch (const std::exception &e)
         {
           std::cerr << e.what() << '\n';
@@ -1055,26 +1140,31 @@ namespace ECProject
       proxy_proto::RecalReply *response)
   {
     bool if_partial_decoding = help_recal_plan->if_partial_decoding();
+    bool if_g_recal = help_recal_plan->type();
     std::string proxy_ip = help_recal_plan->mainproxyip();
     int proxy_port = help_recal_plan->mainproxyport();
     int block_size = help_recal_plan->block_size();
     int parity_num = help_recal_plan->parity_num();
+    int k = help_recal_plan->k();
+    ECProject::EncodeType encode_type = (ECProject::EncodeType)help_recal_plan->encodetype();
     std::vector<std::string> datanode_ip;
     std::vector<int> datanode_port;
     std::vector<std::string> blockkeys;
+    std::vector<int> blockids;
     for (int i = 0; i < help_recal_plan->blockkeys_size(); i++)
     {
       datanode_ip.push_back(help_recal_plan->datanodeip(i));
       datanode_port.push_back(help_recal_plan->datanodeport(i));
       blockkeys.push_back(help_recal_plan->blockkeys(i));
+      blockids.push_back(help_recal_plan->blockids(i));
     }
     
     // get data from the datanode
     auto myLock_ptr = std::make_shared<std::mutex>();
     auto blocks_ptr = std::make_shared<std::vector<std::vector<char>>>();
-    auto blocks_id_ptr = std::make_shared<std::vector<std::string>>();
+    auto blocks_key_ptr = std::make_shared<std::vector<std::string>>();
     auto blocks_idx_ptr = std::make_shared<std::vector<int>>();
-    auto getFromNode = [this, blocks_ptr, blocks_id_ptr, blocks_idx_ptr, myLock_ptr](int block_idx, std::string block_key, int block_size, std::string node_ip, int node_port) mutable
+    auto getFromNode = [this, blocks_ptr, blocks_key_ptr, blocks_idx_ptr, myLock_ptr](int block_idx, std::string block_key, int block_size, std::string node_ip, int node_port) mutable
     {
       std::vector<char> temp(block_size);
       bool ret = GetFromDatanode(block_key.c_str(), block_key.size(), temp.data(), block_size, node_ip.c_str(), node_port, block_idx + 2);
@@ -1086,7 +1176,7 @@ namespace ECProject
       }
       myLock_ptr->lock();
       blocks_ptr->push_back(temp);
-      blocks_id_ptr->push_back(block_key);
+      blocks_key_ptr->push_back(block_key);
       blocks_idx_ptr->push_back(block_idx);
       myLock_ptr->unlock();
     };
@@ -1100,7 +1190,7 @@ namespace ECProject
       std::vector<std::thread> read_treads;
       for (int j = 0; j < block_num; j++)
       {
-        read_treads.push_back(std::thread(getFromNode, j, blockkeys[j], block_size, datanode_ip[j], datanode_port[j]));
+        read_treads.push_back(std::thread(getFromNode, blockids[j], blockkeys[j], block_size, datanode_ip[j], datanode_port[j]));
       }
       for (int j = 0; j < block_num; j++)
       {
@@ -1131,36 +1221,37 @@ namespace ECProject
     }
     for (int j = 0; j < block_num; j++)
     {
-      int idx = (*blocks_idx_ptr)[j];
-      if (idx < block_num)
-      {
-        memcpy(data[idx], (*blocks_ptr)[j].data(), block_size);
-      }
+      // int idx = (*blocks_idx_ptr)[j];
+      // if (idx < block_num)
+      // {
+      //   memcpy(data[idx], (*blocks_ptr)[j].data(), block_size);
+      // }
+      memcpy(data[j], (*blocks_ptr)[j].data(), block_size);
     }
 
     // encode
-    std::string value;
     if (if_partial_decoding) // partial encoding
     {
       if (IF_DEBUG)
       {
         std::cout << "[Helper Proxy" << m_self_cluster_id << "] partial encoding!" << std::endl;
+        for(auto it = blocks_idx_ptr->begin(); it != blocks_idx_ptr->end(); it++)
+        {
+            std::cout << (*it) << " ";
+        }
+        std::cout << std::endl;
       }
-      std::vector<int> new_matrix(parity_num * block_num, 1);
-      jerasure_matrix_encode(block_num, parity_num, 8, new_matrix.data(), data, coding, block_size);
-      for (int j = 0; j < parity_num; j++)
+      
+      if(if_g_recal)
       {
-        value += std::string(coding[j], block_size); // send value
+        encode_partial_blocks_for_gr(k, parity_num, data, coding, block_size, blocks_idx_ptr, block_num, encode_type);
+      }
+      else
+      {
+        perform_addition(data, coding, block_size, block_num, parity_num);
       }
     }
-    else
-    {
-      for (int j = 0; j < block_num; j++)
-      { // send key and value
-        value += blockkeys[j];
-        value += std::string(data[j], block_size);
-      }
-    }
+
     // send to main proxy
     asio::error_code error;
     asio::io_context io_context;
@@ -1176,21 +1267,40 @@ namespace ECProject
     {
       std::cout << "Connect to " << proxy_ip << ":" << proxy_port << " success!" << std::endl;
     }
+
+    int value_size = 0;
     
     std::vector<unsigned char> int_buf_self_cluster_id = ECProject::int_to_bytes(m_self_cluster_id);
-    asio::write(socket, asio::buffer(int_buf_self_cluster_id, int_buf_self_cluster_id.size()));
+    asio::write(socket, asio::buffer(int_buf_self_cluster_id, int_buf_self_cluster_id.size()), error);
     if (!if_partial_decoding)
     {
       std::vector<unsigned char> int_buf_num_of_blocks = ECProject::int_to_bytes(block_num);
-      asio::write(socket, asio::buffer(int_buf_num_of_blocks, int_buf_num_of_blocks.size()));
+      asio::write(socket, asio::buffer(int_buf_num_of_blocks, int_buf_num_of_blocks.size()), error);
+      int j = 0;
+      for(auto it = blocks_idx_ptr->begin(); it != blocks_idx_ptr->end(); it++, j++)
+      { 
+        // send index and value
+        int block_idx = *it;
+        std::vector<unsigned char> byte_block_idx = ECProject::int_to_bytes(block_idx);
+        asio::write(socket, asio::buffer(byte_block_idx, byte_block_idx.size()), error);
+        asio::write(socket, asio::buffer(data[j], block_size), error);
+        value_size += block_size;
+      }
     }
-    asio::write(socket, asio::buffer(value, value.size()), error);
+    else
+    {
+      for (int j = 0; j < parity_num; j++)
+      {
+        asio::write(socket, asio::buffer(coding[j], block_size), error);
+        value_size += block_size;
+      }
+    }
     asio::error_code ignore_ec;
     socket.shutdown(asio::ip::tcp::socket::shutdown_send, ignore_ec);
     socket.close(ignore_ec);
     if (IF_DEBUG)
     {
-      std::cout << "[Helper Proxy" << m_self_cluster_id << "] Send value to proxy" << proxy_port << "! With length of " << value.size() << std::endl;
+      std::cout << "[Helper Proxy" << m_self_cluster_id << "] Send value to proxy" << proxy_port << "! With length of " << value_size << std::endl;
     }
 
     return grpc::Status::OK;
@@ -1221,16 +1331,10 @@ namespace ECProject
     {
       auto relocate_single_block = [this](int j, std::string block_key, int block_size, std::string src_node_ip, int src_node_port, std::string des_node_ip, int des_node_port)
       {
-        std::vector<char> temp(block_size);
-        bool ret1 = GetFromDatanode(block_key.c_str(), block_key.size(), temp.data(), block_size, src_node_ip.c_str(), src_node_port, j + 2);
-        if (!ret1)
+        bool ret = BlockRelocation(block_key.c_str(), block_size, src_node_ip.c_str(), src_node_port, des_node_ip.c_str(), des_node_port);
+        if(!ret)
         {
-          std::cout << "[Block Relocation] Get from the src node failed : " << block_key << std::endl;
-        }
-        bool ret2 = SetToDatanode(block_key.c_str(), block_key.size(), temp.data(), block_size, des_node_ip.c_str(), des_node_port, j + 2);
-        if (!ret2)
-        {
-          std::cout << "[Block Relocation] Set to the des node failed : " << block_key << std::endl;
+          std::cout << "[Block Relocation] Relocate " << block_key << " Failed!" << std::endl;
         }
         std::string src_ip_port = src_node_ip + ":" + std::to_string(src_node_port);
         bool ret3 = DelInDatanode(block_key, src_ip_port);

@@ -76,6 +76,7 @@ namespace ECProject
     bool SetToDatanode(const char *key, size_t key_length, const char *value, size_t value_length, const char *ip, int port, int offset);
     bool GetFromDatanode(const char *key, size_t key_length, char *value, size_t value_length, const char *ip, int port, int offset);
     bool DelInDatanode(std::string key, std::string node_ip_port);
+    bool BlockRelocation(const char *key, size_t value_length, const char *src_ip, int src_port, const char *des_ip, int des_port);
 
   private:
     std::mutex m_mutex;

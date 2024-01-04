@@ -81,6 +81,8 @@ message helpRecalPlan {
   int32 block_size = 8;
   repeated int32 blockids = 9;
   int32 parity_num = 10;
+  int32 k = 11;
+  int32 encodetype = 12;
 }
 
 // block relocation
@@ -139,10 +141,11 @@ message ObjectAndPlacement{
   repeated string datanodeip = 7;
   repeated int32 datanodeport = 8;
   repeated string blockkeys = 9;
-  int32 block_size = 10;
-  int32 encode_type = 11;
-  string clientip = 12;
-  int32 clientport = 13;
+  repeated int32 blockids = 10;
+  int32 block_size = 11;
+  int32 encode_type = 12;
+  string clientip = 13;
+  int32 clientport = 14;
 }
 message SetReply {
   bool ifcommit = 1;

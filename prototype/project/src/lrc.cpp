@@ -238,3 +238,53 @@ int ECProject::check_decodable_azure_lrc(int k, int g, int l, std::vector<int> f
     }
     return 1;
 }
+
+bool ECProject::encode_partial_blocks_for_gr(int k, int m, char **data_ptrs, char **coding_ptrs, int blocksize, std::shared_ptr<std::vector<int>> data_idx_ptrs, int block_num, EncodeType encode_type)
+{
+    int *rs_matrix = NULL;
+    if(encode_type == Azure_LRC)
+    {
+        rs_matrix = reed_sol_vandermonde_coding_matrix(k, m, 8);
+    }
+    else if(encode_type == Optimal_Cauchy_LRC)
+    {
+        rs_matrix = cauchy_good_general_coding_matrix(k, m, 8);
+    }
+    
+    std::vector<int> matrix(m * k, 0);
+    memcpy(matrix.data(), rs_matrix, m * k * sizeof(int));
+    free(rs_matrix);
+    
+    std::vector<int> new_matrix(m * block_num, 1);
+
+    int idx = 0;
+    for(auto it = data_idx_ptrs->begin(); it != data_idx_ptrs->end(); it++)
+    {
+        for(int i = 0; i < m; i++)
+        {
+            int j = *it;
+            new_matrix[i * block_num + idx] = matrix[i * k + j];
+        }
+        idx++;
+    }
+
+    jerasure_matrix_encode(block_num, m, 8, new_matrix.data(), data_ptrs, coding_ptrs, blocksize);
+
+    return true;
+}
+
+bool ECProject::perform_addition(char **data_ptrs, char **coding_ptrs, int blocksize, int block_num, int parity_num)
+{
+    if(block_num % parity_num != 0)
+    {
+        printf("invalid! %d mod %d != 0\n", block_num, parity_num);
+        return false;
+    }
+    int num_of_block_each_parity = block_num / parity_num;
+    for(int i = 0; i < parity_num; i++)
+    {
+        std::vector<int> new_matrix(1 * num_of_block_each_parity, 1);
+        jerasure_matrix_encode(num_of_block_each_parity, 1, 8, new_matrix.data(), &data_ptrs[i * num_of_block_each_parity], &coding_ptrs[i], blocksize);
+    }
+    return true;
+}

@@ -42,15 +42,18 @@ message RequestResult {
 message SetInfo {
     string block_key = 1;
     int32 block_size = 2;
-    string proxy_ip = 3;
-    int32 proxy_port = 4;
+    int32 block_id = 3;
+    string proxy_ip = 4;
+    int32 proxy_port = 5;
+    bool ispull = 6;
 }
 
 message GetInfo {
     string block_key = 1;
     int32 block_size = 2;
-    string proxy_ip = 3;
-    int32 proxy_port = 4;
+    int32 block_id = 3;
+    string proxy_ip = 4;
+    int32 proxy_port = 5;
 }
 
 message DelInfo {

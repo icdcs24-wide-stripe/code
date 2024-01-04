@@ -38,9 +38,9 @@ namespace ECProject
     int block_size;
     int map2group, map2stripe, map2cluster, map2node;
     std::string map2key;
-    Block(const std::string block_key, char block_type, int block_size, int map2group,
+    Block(int block_id, const std::string block_key, char block_type, int block_size, int map2group,
           int map2stripe, int map2cluster, int map2node, const std::string map2key)
-        : block_key(block_key), block_type(block_type), block_size(block_size), map2group(map2group), map2stripe(map2stripe), map2cluster(map2cluster), map2node(map2node), map2key(map2key) {}
+        : block_id(block_id), block_key(block_key), block_type(block_type), block_size(block_size), map2group(map2group), map2stripe(map2stripe), map2cluster(map2cluster), map2node(map2node), map2key(map2key) {}
     Block() = default;
   } Block;
 

@@ -506,9 +506,11 @@ class SetInfo final :
 
   enum : int {
     kBlockKeyFieldNumber = 1,
-    kProxyIpFieldNumber = 3,
+    kProxyIpFieldNumber = 4,
     kBlockSizeFieldNumber = 2,
-    kProxyPortFieldNumber = 4,
+    kBlockIdFieldNumber = 3,
+    kProxyPortFieldNumber = 5,
+    kIspullFieldNumber = 6,
   };
   // string block_key = 1;
   void clear_block_key();
@@ -524,7 +526,7 @@ class SetInfo final :
   std::string* _internal_mutable_block_key();
   public:
 
-  // string proxy_ip = 3;
+  // string proxy_ip = 4;
   void clear_proxy_ip();
   const std::string& proxy_ip() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -547,13 +549,31 @@ class SetInfo final :
   void _internal_set_block_size(int32_t value);
   public:
 
-  // int32 proxy_port = 4;
+  // int32 block_id = 3;
+  void clear_block_id();
+  int32_t block_id() const;
+  void set_block_id(int32_t value);
+  private:
+  int32_t _internal_block_id() const;
+  void _internal_set_block_id(int32_t value);
+  public:
+
+  // int32 proxy_port = 5;
   void clear_proxy_port();
   int32_t proxy_port() const;
   void set_proxy_port(int32_t value);
   private:
   int32_t _internal_proxy_port() const;
   void _internal_set_proxy_port(int32_t value);
+  public:
+
+  // bool ispull = 6;
+  void clear_ispull();
+  bool ispull() const;
+  void set_ispull(bool value);
+  private:
+  bool _internal_ispull() const;
+  void _internal_set_ispull(bool value);
   public:
 
   // @@protoc_insertion_point(class_scope:datanode_proto.SetInfo)
@@ -567,7 +587,9 @@ class SetInfo final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr block_key_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr proxy_ip_;
     int32_t block_size_;
+    int32_t block_id_;
     int32_t proxy_port_;
+    bool ispull_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
   union { Impl_ _impl_; };
@@ -697,9 +719,10 @@ class GetInfo final :
 
   enum : int {
     kBlockKeyFieldNumber = 1,
-    kProxyIpFieldNumber = 3,
+    kProxyIpFieldNumber = 4,
     kBlockSizeFieldNumber = 2,
-    kProxyPortFieldNumber = 4,
+    kBlockIdFieldNumber = 3,
+    kProxyPortFieldNumber = 5,
   };
   // string block_key = 1;
   void clear_block_key();
@@ -715,7 +738,7 @@ class GetInfo final :
   std::string* _internal_mutable_block_key();
   public:
 
-  // string proxy_ip = 3;
+  // string proxy_ip = 4;
   void clear_proxy_ip();
   const std::string& proxy_ip() const;
   template <typename ArgT0 = const std::string&, typename... ArgT>
@@ -738,7 +761,16 @@ class GetInfo final :
   void _internal_set_block_size(int32_t value);
   public:
 
-  // int32 proxy_port = 4;
+  // int32 block_id = 3;
+  void clear_block_id();
+  int32_t block_id() const;
+  void set_block_id(int32_t value);
+  private:
+  int32_t _internal_block_id() const;
+  void _internal_set_block_id(int32_t value);
+  public:
+
+  // int32 proxy_port = 5;
   void clear_proxy_port();
   int32_t proxy_port() const;
   void set_proxy_port(int32_t value);
@@ -758,6 +790,7 @@ class GetInfo final :
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr block_key_;
     ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr proxy_ip_;
     int32_t block_size_;
+    int32_t block_id_;
     int32_t proxy_port_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   };
@@ -1096,7 +1129,27 @@ inline void SetInfo::set_block_size(int32_t value) {
   // @@protoc_insertion_point(field_set:datanode_proto.SetInfo.block_size)
 }
 
-// string proxy_ip = 3;
+// int32 block_id = 3;
+inline void SetInfo::clear_block_id() {
+  _impl_.block_id_ = 0;
+}
+inline int32_t SetInfo::_internal_block_id() const {
+  return _impl_.block_id_;
+}
+inline int32_t SetInfo::block_id() const {
+  // @@protoc_insertion_point(field_get:datanode_proto.SetInfo.block_id)
+  return _internal_block_id();
+}
+inline void SetInfo::_internal_set_block_id(int32_t value) {
+  
+  _impl_.block_id_ = value;
+}
+inline void SetInfo::set_block_id(int32_t value) {
+  _internal_set_block_id(value);
+  // @@protoc_insertion_point(field_set:datanode_proto.SetInfo.block_id)
+}
+
+// string proxy_ip = 4;
 inline void SetInfo::clear_proxy_ip() {
   _impl_.proxy_ip_.ClearToEmpty();
 }
@@ -1146,7 +1199,7 @@ inline void SetInfo::set_allocated_proxy_ip(std::string* proxy_ip) {
   // @@protoc_insertion_point(field_set_allocated:datanode_proto.SetInfo.proxy_ip)
 }
 
-// int32 proxy_port = 4;
+// int32 proxy_port = 5;
 inline void SetInfo::clear_proxy_port() {
   _impl_.proxy_port_ = 0;
 }
@@ -1164,6 +1217,26 @@ inline void SetInfo::_internal_set_proxy_port(int32_t value) {
 inline void SetInfo::set_proxy_port(int32_t value) {
   _internal_set_proxy_port(value);
   // @@protoc_insertion_point(field_set:datanode_proto.SetInfo.proxy_port)
+}
+
+// bool ispull = 6;
+inline void SetInfo::clear_ispull() {
+  _impl_.ispull_ = false;
+}
+inline bool SetInfo::_internal_ispull() const {
+  return _impl_.ispull_;
+}
+inline bool SetInfo::ispull() const {
+  // @@protoc_insertion_point(field_get:datanode_proto.SetInfo.ispull)
+  return _internal_ispull();
+}
+inline void SetInfo::_internal_set_ispull(bool value) {
+  
+  _impl_.ispull_ = value;
+}
+inline void SetInfo::set_ispull(bool value) {
+  _internal_set_ispull(value);
+  // @@protoc_insertion_point(field_set:datanode_proto.SetInfo.ispull)
 }
 
 // -------------------------------------------------------------------
@@ -1240,7 +1313,27 @@ inline void GetInfo::set_block_size(int32_t value) {
   // @@protoc_insertion_point(field_set:datanode_proto.GetInfo.block_size)
 }
 
-// string proxy_ip = 3;
+// int32 block_id = 3;
+inline void GetInfo::clear_block_id() {
+  _impl_.block_id_ = 0;
+}
+inline int32_t GetInfo::_internal_block_id() const {
+  return _impl_.block_id_;
+}
+inline int32_t GetInfo::block_id() const {
+  // @@protoc_insertion_point(field_get:datanode_proto.GetInfo.block_id)
+  return _internal_block_id();
+}
+inline void GetInfo::_internal_set_block_id(int32_t value) {
+  
+  _impl_.block_id_ = value;
+}
+inline void GetInfo::set_block_id(int32_t value) {
+  _internal_set_block_id(value);
+  // @@protoc_insertion_point(field_set:datanode_proto.GetInfo.block_id)
+}
+
+// string proxy_ip = 4;
 inline void GetInfo::clear_proxy_ip() {
   _impl_.proxy_ip_.ClearToEmpty();
 }
@@ -1290,7 +1383,7 @@ inline void GetInfo::set_allocated_proxy_ip(std::string* proxy_ip) {
   // @@protoc_insertion_point(field_set_allocated:datanode_proto.GetInfo.proxy_ip)
 }
 
-// int32 proxy_port = 4;
+// int32 proxy_port = 5;
 inline void GetInfo::clear_proxy_port() {
   _impl_.proxy_port_ = 0;
 }
